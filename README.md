@@ -1,5 +1,12 @@
 # Employee Attendance System
 
+--- 
+
+## 📌 Project Description
+The Employee Attendance System is a digital solution designed to automate attendance tracking for small and medium-sized businesses. This system uses a MongoDB database to securely store all attendance records. The web application is built with Streamlit, ensuring a simple and user-friendly interface. Features include employee management, attendance analysis, and report generation, making it an essential tool for HR and business owners.
+
+---
+
 ## 🏆 Objective
 
 ### 1. Track Employee Attendance
@@ -44,9 +51,6 @@
 ✔ Free & Open Source – No need for additional software purchases.
 
 ---
-
-## 📌 Project Description
-The Employee Attendance System is a digital solution designed to automate attendance tracking for small and medium-sized businesses. This system uses a MongoDB database to securely store all attendance records. The web application is built with Streamlit, ensuring a simple and user-friendly interface. Features include employee management, attendance analysis, and report generation, making it an essential tool for HR and business owners.
 
 ## 🛠 Tech Stack
 - **Frontend:** Streamlit
