@@ -265,11 +265,12 @@ with tab4:
     )
     
     if analysis_type == "Monthly Summary":
-        selected_month = st.date_input(
+        # Use date_input with a date object, then format it for the query
+        selected_month_date = st.date_input(
             "Select Month",
-            date.today(),
-            format="YYYY-MM"
-        ).strftime("%Y-%m")
+            datetime.now().replace(day=1),  # Default to first day of current month
+        )
+        selected_month = selected_month_date.strftime("%Y-%m")
         
         records = db.get_attendance({
             "date": {"$regex": f"^{selected_month}"}
@@ -279,7 +280,7 @@ with tab4:
             df = process_attendance_data(records)
             
             # Summary stats
-            summary = df.groupby(["ID", "Name", "Department"])["Status"].value_counts().unstack().fillna(0)
+            summary = df.groupby(["ID", "Department"])["Status"].value_counts().unstack().fillna(0)
             summary["Total"] = summary.sum(axis=1)
             summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100)
             
@@ -288,7 +289,7 @@ with tab4:
             # Visualization
             fig = px.bar(
                 summary.reset_index(),
-                x="Name",
+                x="ID",
                 y=["Present", "Absent", "Leave"],
                 title=f"Attendance Summary for {selected_month}",
                 labels={"value": "Days", "variable": "Status"}
@@ -340,8 +341,8 @@ with tab4:
         
         if time_period == "Custom Range":
             col1, col2 = st.columns(2)
-            start_date = col1.date_input("Start Date")
-            end_date = col2.date_input("End Date")
+            start_date = col1.date_input("Start Date", date.today() - timedelta(days=30))
+            end_date = col2.date_input("End Date", date.today())
         else:
             days = int(time_period.split()[1])
             end_date = date.today()
