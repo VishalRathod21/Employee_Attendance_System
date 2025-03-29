@@ -2,3 +2,10 @@ streamlit
 pymongo
 python-dotenv
 pandas
+plotly
+python-dateutil
+certifi
+matplotlib 
+black
+pylint
+pytest
