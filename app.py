@@ -281,7 +281,7 @@ with tab4:
             # Summary stats
             summary = df.groupby(["ID", "Name", "Department"])["Status"].value_counts().unstack().fillna(0)
             summary["Total"] = summary.sum(axis=1)
-            summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100
+            summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100)
             
             st.dataframe(summary.style.format("{:.1f}", subset=["Attendance %"]))
             
