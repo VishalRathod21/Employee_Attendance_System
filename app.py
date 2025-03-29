@@ -93,21 +93,20 @@ def display_employee_table(employees):
     st.dataframe(df, use_container_width=True)
 
 def process_attendance_data(attendance_records, filter_emp_id=None):
+    all_employees = {e["employeeId"]: e for e in db.get_employees()}
     data = []
     for record in attendance_records:
         for emp in record["employees"]:
             if filter_emp_id and emp["employeeId"] != filter_emp_id:
                 continue
-                
+            employee_info = all_employees.get(emp["employeeId"], {})    
             data.append({
                 "Date": record["date"],
                 "ID": emp["employeeId"],
                 "Status": emp["status"],
                 "Check-in": emp.get("checkIn", "N/A"),
                 "Check-out": emp.get("checkOut", "N/A"),
-                "Department": next(
-                    (e["department"] for e in db.get_employees() 
-                    if e["employeeId"] == emp["employeeId"]), "N/A"
+                "Department": employee_info.get("department", "N/A")
             })
     return pd.DataFrame(data) if data else None
 
