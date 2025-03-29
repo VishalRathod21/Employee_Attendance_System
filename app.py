@@ -278,23 +278,25 @@ with tab4:
         
         if records:
             df = process_attendance_data(records)
-            
-            # Summary stats
-            summary = df.groupby(["ID", "Department"])["Status"].value_counts().unstack().fillna(0)
-            summary["Total"] = summary.sum(axis=1)
-            summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100)
-            
-            st.dataframe(summary.style.format("{:.1f}", subset=["Attendance %"]))
-            
-            # Visualization
-            fig = px.bar(
-                summary.reset_index(),
-                x="ID",
-                y=["Present", "Absent", "Leave"],
-                title=f"Attendance Summary for {selected_month}",
-                labels={"value": "Days", "variable": "Status"}
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if df is None:
+                st.warning(f"No attendance data available for {selected_month}")
+            else:
+                # Summary stats
+                summary = df.groupby(["ID", "Department"])["Status"].value_counts().unstack().fillna(0)
+                summary["Total"] = summary.sum(axis=1)
+                summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100)
+                
+                st.dataframe(summary.style.format("{:.1f}", subset=["Attendance %"]))
+                
+                # Visualization
+                fig = px.bar(
+                    summary.reset_index(),
+                    x="ID",
+                    y=["Present", "Absent", "Leave"],
+                    title=f"Attendance Summary for {selected_month}",
+                    labels={"value": "Days", "variable": "Status"}
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"No attendance records found for {selected_month}")
     
@@ -310,26 +312,28 @@ with tab4:
         
         if records:
             df = process_attendance_data(records, selected_employee)
-            
-            # Calculate stats
-            status_counts = df["Status"].value_counts()
-            present_percentage = status_counts.get("Present", 0) / len(df) * 100
-            
-            # Display metrics
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Total Days Recorded", len(df))
-            col2.metric("Present Days", status_counts.get("Present", 0))
-            col3.metric("Attendance Rate", f"{present_percentage:.1f}%")
-            
-            # Time series chart
-            fig = px.line(
-                df,
-                x="Date",
-                y="Status",
-                title=f"Attendance History for Employee {selected_employee}",
-                category_orders={"Status": ["Present", "Late", "Half-Day", "Leave", "Absent"]}
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if df is None:
+                st.warning(f"No attendance data available for employee {selected_employee}")
+            else:
+                # Calculate stats
+                status_counts = df["Status"].value_counts()
+                present_percentage = status_counts.get("Present", 0) / len(df) * 100
+                
+                # Display metrics
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Total Days Recorded", len(df))
+                col2.metric("Present Days", status_counts.get("Present", 0))
+                col3.metric("Attendance Rate", f"{present_percentage:.1f}%")
+                
+                # Time series chart
+                fig = px.line(
+                    df,
+                    x="Date",
+                    y="Status",
+                    title=f"Attendance History for Employee {selected_employee}",
+                    category_orders={"Status": ["Present", "Late", "Half-Day", "Leave", "Absent"]}
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"No attendance records found for employee {selected_employee}")
     
@@ -357,25 +361,27 @@ with tab4:
         
         if records:
             df = process_attendance_data(records)
-            
-            # Department-wise analysis
-            dept_stats = df.groupby("Department")["Status"].value_counts().unstack().fillna(0)
-            dept_stats["Total"] = dept_stats.sum(axis=1)
-            
-            for status in ["Present", "Absent", "Leave"]:
-                if status in dept_stats:
-                    dept_stats[f"{status} %"] = dept_stats[status] / dept_stats["Total"] * 100
-            
-            st.dataframe(dept_stats.style.format("{:.1f}%", subset=[col for col in dept_stats if "%" in col]))
-            
-            # Visualization
-            fig = px.pie(
-                dept_stats.reset_index(),
-                names="Department",
-                values="Present",
-                title="Present Employees by Department"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if df is None:
+                st.warning(f"No attendance data available for the selected period")
+            else:
+                # Department-wise analysis
+                dept_stats = df.groupby("Department")["Status"].value_counts().unstack().fillna(0)
+                dept_stats["Total"] = dept_stats.sum(axis=1)
+                
+                for status in ["Present", "Absent", "Leave"]:
+                    if status in dept_stats:
+                        dept_stats[f"{status} %"] = dept_stats[status] / dept_stats["Total"] * 100
+                
+                st.dataframe(dept_stats.style.format("{:.1f}%", subset=[col for col in dept_stats if "%" in col]))
+                
+                # Visualization
+                fig = px.pie(
+                    dept_stats.reset_index(),
+                    names="Department",
+                    values="Present",
+                    title="Present Employees by Department"
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"No attendance records found for the selected period")
 
