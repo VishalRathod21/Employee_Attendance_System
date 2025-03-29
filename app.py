@@ -103,12 +103,11 @@ def process_attendance_data(attendance_records, filter_emp_id=None):
             data.append({
                 "Date": record["date"],
                 "ID": emp["employeeId"],
-                "Name": employee_info.get("empName", "N/A"),
+                "Name": employee_info.get("empName", "N/A"),  # Added Name
                 "Status": emp["status"],
                 "Check-in": emp.get("checkIn", "N/A"),
                 "Check-out": emp.get("checkOut", "N/A"),
-                "Department": employee_info.get("department", "N/A"),
-                "Position": employee_info.get("position", "N/A")
+                "Department": employee_info.get("department", "N/A")
             })
     return pd.DataFrame(data) if data else None
 
@@ -136,11 +135,11 @@ with tab1:
         mobile = col2.text_input("Mobile Number*")
         department = st.selectbox(
             "Department*",
-            ["HR", "IT", "Finance", "Operations", "Marketing", "Sales", "Other"]
+            ["HR", "IT", "Finance", "Operations", "Marketing", "Sales"]
         )
         position = st.selectbox(
             "Position*",
-            ["Intern", "Associate", "Senior", "Lead", "Manager", "Director", "Other"]
+            ["Intern", "Associate", "Senior", "Lead", "Manager", "Director"]
         )
         
         if st.form_submit_button("Add Employee"):
@@ -180,8 +179,7 @@ with tab2:
             
             if st.button("Delete and Re-mark Attendance"):
                 db.delete_attendance(selected_date.strftime("%Y-%m-%d"))
-                st.experimental_rerun()
-            
+                st.rerun 加
             attendance_df = process_attendance_data([existing_attendance])
             st.dataframe(attendance_df, use_container_width=True)
         else:
@@ -229,7 +227,7 @@ with tab3:
     employees = db.get_employees()
     selected_employee = st.selectbox(
         "Filter by Employee (Optional)",
-        [None] + [f"{emp['employeeId']} - {emp['empName']}" for emp in employees]
+        [None] + [emp["employeeId"] for emp in employees]
     )
     
     if st.button("Load Records"):
@@ -241,8 +239,7 @@ with tab3:
         }
         
         records = db.get_attendance(query)
-        emp_id = selected_employee.split(" - ")[0] if selected_employee else None
-        attendance_df = process_attendance_data(records, emp_id)
+        attendance_df = process_attendance_data(records, selected_employee)
         
         if attendance_df is not None:
             st.dataframe(attendance_df, use_container_width=True)
@@ -264,15 +261,15 @@ with tab4:
     
     analysis_type = st.radio(
         "Select Analysis Type",
-        ["Monthly Summary", "Employee Statistics", "Department Comparison"],
-        horizontal=True
+        ["Monthly Summary", "Employee Statistics", "Department Comparison"]
     )
     
     if analysis_type == "Monthly Summary":
-        selected_month = st.date_input(
+        selected_month_date = st.date_input(
             "Select Month",
-            datetime.now().replace(day=1)  # Default to first day of current month
-        ).strftime("%Y-%m")
+            datetime.now().replace(day=1),
+        )
+        selected_month = selected_month_date.strftime("%Y-%m")
         
         records = db.get_attendance({
             "date": {"$regex": f"^{selected_month}"}
@@ -280,62 +277,59 @@ with tab4:
         
         if records:
             df = process_attendance_data(records)
-            
-            # Summary stats
-            summary = df.groupby(["ID", "Name", "Department"])["Status"].value_counts().unstack().fillna(0)
-            summary["Total"] = summary.sum(axis=1)
-            summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100)
-            
-            st.dataframe(summary.style.format("{:.1f}", subset=["Attendance %"]))
-            
-            # Visualization
-            fig = px.bar(
-                summary.reset_index(),
-                x="Name",
-                y=["Present", "Absent", "Leave"],
-                title=f"Attendance Summary for {selected_month}",
-                labels={"value": "Days", "variable": "Status"},
-                barmode="group"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if df is None:
+                st.warning(f"No attendance data available for {selected_month}")
+            else:
+                summary = df.groupby(["ID", "Name", "Department"])["Status"].value_counts().unstack().fillna(0)
+                summary["Total"] = summary.sum(axis=1)
+                summary["Attendance %"] = (summary.get("Present", 0) / summary["Total"] * 100)
+                
+                st.dataframe(summary.style.format("{:.1f}", subset=["Attendance %"]))
+                
+                fig = px.bar(
+                    summary.reset_index(),
+                    x="Name",
+                    y=["Present", "Absent", "Leave"],
+                    title=f"Attendance Summary for {selected_month}",
+                    labels={"value": "Days", "variable": "Status"}
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"No attendance records found for {selected_month}")
     
     elif analysis_type == "Employee Statistics":
         selected_employee = st.selectbox(
             "Select Employee",
-            [f"{emp['employeeId']} - {emp['empName']}" for emp in db.get_employees()]
+            [emp["employeeId"] for emp in db.get_employees()]
         )
         
-        emp_id = selected_employee.split(" - ")[0]
         records = db.get_attendance({
-            "employees.employeeId": emp_id
+            "employees.employeeId": selected_employee
         })
         
         if records:
-            df = process_attendance_data(records, emp_id)
-            
-            # Calculate stats
-            status_counts = df["Status"].value_counts()
-            present_percentage = status_counts.get("Present", 0) / len(df) * 100
-            
-            # Display metrics
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Total Days Recorded", len(df))
-            col2.metric("Present Days", status_counts.get("Present", 0))
-            col3.metric("Attendance Rate", f"{present_percentage:.1f}%")
-            
-            # Time series chart
-            fig = px.line(
-                df,
-                x="Date",
-                y="Status",
-                title=f"Attendance History for {selected_employee}",
-                category_orders={"Status": ["Present", "Late", "Half-Day", "Leave", "Absent"]}
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            df = process_attendance_data(records, selected_employee)
+            if df is None:
+                st.warning(f"No attendance data available for employee {selected_employee}")
+            else:
+                status_counts = df["Status"].value_counts()
+                present_percentage = status_counts.get("Present", 0) / len(df) * 100
+                
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Total Days Recorded", len(df))
+                col2.metric("Present Days", status_counts.get("Present", 0))
+                col3.metric("Attendance Rate", f"{present_percentage:.1f}%")
+                
+                fig = px.line(
+                    df,
+                    x="Date",
+                    y="Status",
+                    title=f"Attendance History for Employee {selected_employee}",
+                    category_orders={"Status": ["Present", "Late", "Half-Day", "Leave", "Absent"]}
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
-            st.warning(f"No attendance records found for {selected_employee}")
+            st.warning(f"No attendance records found for employee {selected_employee}")
     
     elif analysis_type == "Department Comparison":
         time_period = st.selectbox(
@@ -345,8 +339,8 @@ with tab4:
         
         if time_period == "Custom Range":
             col1, col2 = st.columns(2)
-            start_date = col1.date_input("Start Date")
-            end_date = col2.date_input("End Date")
+            start_date = col1.date_input("Start Date", date.today() - timedelta(days=30))
+            end_date = col2.date_input("End Date", date.today())
         else:
             days = int(time_period.split()[1])
             end_date = date.today()
@@ -361,25 +355,25 @@ with tab4:
         
         if records:
             df = process_attendance_data(records)
-            
-            # Department-wise analysis
-            dept_stats = df.groupby("Department")["Status"].value_counts().unstack().fillna(0)
-            dept_stats["Total"] = dept_stats.sum(axis=1)
-            
-            for status in ["Present", "Absent", "Leave"]:
-                if status in dept_stats:
-                    dept_stats[f"{status} %"] = dept_stats[status] / dept_stats["Total"] * 100
-            
-            st.dataframe(dept_stats.style.format("{:.1f}%", subset=[col for col in dept_stats if "%" in col]))
-            
-            # Visualization
-            fig = px.pie(
-                dept_stats.reset_index(),
-                names="Department",
-                values="Present",
-                title="Present Employees by Department"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if df is None:
+                st.warning(f"No attendance data available for the selected period")
+            else:
+                dept_stats = df.groupby("Department")["Status"].value_counts().unstack().fillna(0)
+                dept_stats["Total"] = dept_stats.sum(axis=1)
+                
+                for status in ["Present", "Absent", "Leave"]:
+                    if status in dept_stats:
+                        dept_stats[f"{status} %"] = dept_stats[status] / dept_stats["Total"] * 100
+                
+                st.dataframe(dept_stats.style.format("{:.1f}%", subset=[col for col in dept_stats if "%" in col]))
+                
+                fig = px.pie(
+                    dept_stats.reset_index(),
+                    names="Department",
+                    values="Present",
+                    title="Present Employees by Department"
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"No attendance records found for the selected period")
 
@@ -392,26 +386,22 @@ with tab5:
         st.info("No employees found in the database")
         st.stop()
     
-    # Display all employees
     st.subheader("All Employees")
     display_employee_table(employees)
     
-    # Employee actions
     st.subheader("Employee Actions")
     action = st.radio(
         "Select Action",
-        ["Update Details", "Change Department", "Change Position", "Terminate Employment"],
-        horizontal=True
+        ["Update Details", "Change Department", "Change Position", "Terminate Employment"]
     )
     
     selected_employee = st.selectbox(
         "Select Employee",
-        [f"{emp['employeeId']} - {emp['empName']}" for emp in employees],
+        [emp["employeeId"] for emp in employees],
         key="employee_select"
     )
     
-    emp_id = selected_employee.split(" - ")[0]
-    employee_data = next(emp for emp in employees if emp["employeeId"] == emp_id)
+    employee_data = next(emp for emp in employees if emp["employeeId"] == selected_employee)
     
     if action == "Update Details":
         with st.form("update_employee_form"):
@@ -423,10 +413,9 @@ with tab5:
                     "email": new_email,
                     "mobile": new_mobile
                 }
-                result = db.update_employee(emp_id, update_data)
+                result = db.update_employee(selected_employee, update_data)
                 if result.modified_count > 0:
                     st.success("Employee details updated successfully!")
-                    st.experimental_rerun()
                 else:
                     st.warning("No changes were made")
     
@@ -434,17 +423,16 @@ with tab5:
         with st.form("change_dept_form"):
             new_department = st.selectbox(
                 "New Department",
-                ["HR", "IT", "Finance", "Operations", "Marketing", "Sales", "Other"],
-                index=["HR", "IT", "Finance", "Operations", "Marketing", "Sales", "Other"].index(
+                ["HR", "IT", "Finance", "Operations", "Marketing", "Sales"],
+                index=["HR", "IT", "Finance", "Operations", "Marketing", "Sales"].index(
                     employee_data["department"]
                 )
             )
             
             if st.form_submit_button("Change Department"):
-                result = db.update_employee(emp_id, {"department": new_department})
+                result = db.update_employee(selected_employee, {"department": new_department})
                 if result.modified_count > 0:
                     st.success(f"Department changed to {new_department}")
-                    st.experimental_rerun()
                 else:
                     st.warning("No changes were made")
     
@@ -452,17 +440,16 @@ with tab5:
         with st.form("change_position_form"):
             new_position = st.selectbox(
                 "New Position",
-                ["Intern", "Associate", "Senior", "Lead", "Manager", "Director", "Other"],
-                index=["Intern", "Associate", "Senior", "Lead", "Manager", "Director", "Other"].index(
+                ["Intern", "Associate", "Senior", "Lead", "Manager", "Director"],
+                index=["Intern", "Associate", "Senior", "Lead", "Manager", "Director"].index(
                     employee_data["position"]
                 )
             )
             
             if st.form_submit_button("Change Position"):
-                result = db.update_employee(emp_id, {"position": new_position})
+                result = db.update_employee(selected_employee, {"position": new_position})
                 if result.modified_count > 0:
                     st.success(f"Position changed to {new_position}")
-                    st.experimental_rerun()
                 else:
                     st.warning("No changes were made")
     
@@ -471,21 +458,20 @@ with tab5:
         confirm = st.checkbox("I understand this will permanently remove the employee record")
         
         if confirm and st.button("Terminate Employment"):
-            # Check if employee has attendance records
             has_records = len(db.get_attendance({
-                "employees.employeeId": emp_id
+                "employees.employeeId": selected_employee
             })) > 0
             
             if has_records:
                 st.warning("This employee has attendance records. Their attendance data will remain but will no longer be associated with their employee ID.")
             
-            result = db.delete_employee(emp_id)
+            result = db.delete_employee(selected_employee)
             if result.deleted_count > 0:
                 st.success(f"Employee {selected_employee} terminated successfully")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Failed to terminate employee")
 
 # --- Footer ---
 st.markdown("---")
-st.caption("Employee Attendance System v1.1 | © 2023")
+st.caption("Employee Attendance System v1.0 | © 2023")
