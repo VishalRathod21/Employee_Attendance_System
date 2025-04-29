@@ -1,77 +1,158 @@
 # Employee Attendance System
 
---- 
+A comprehensive employee attendance management system built with Streamlit, featuring face recognition, analytics, and automated reminders.
 
-## 📌 Project Description
-The Employee Attendance System is a digital solution designed to automate attendance tracking for small and medium-sized businesses. This system uses a MongoDB database to securely store all attendance records. The web application is built with Streamlit, ensuring a simple and user-friendly interface. Features include employee management, attendance analysis, and report generation, making it an essential tool for HR and business owners.
+## Features
 
----
+- **User Authentication**
+  - Role-based access (Admin/Employee)
+  - Secure login system
+  - Session management
 
-## 🏆 Objective
+- **Attendance Management**
+  - Face recognition-based attendance
+  - Manual attendance marking
+  - Real-time attendance tracking
+  - Attendance history view
 
-### 1. Track Employee Attendance
-- Mark daily attendance for each employee (Present, Absent, Leave, Late).
-- Maintain date-wise records to track attendance history.
-- Provide check-in/check-out time tracking for companies where timing matters.
+- **Analytics Dashboard**
+  - Attendance status distribution
+  - Daily attendance trends
+  - Department-wise analysis
+  - Custom date range selection
 
-### 2. Maintain Digital Records
-- Store all attendance data in a MongoDB database instead of manual registers.
-- Implement a paperless system to reduce workload.
-- Ensure data safety, preventing loss compared to traditional registers or Excel files.
+- **Employee Management**
+  - Add new employees
+  - Update employee details
+  - Promote employees
+  - Remove employees
 
-### 3. Generate Reports
-- View monthly attendance percentage.
-- Analyze department-wise absenteeism.
-- Generate employee-specific reports for frequent lateness.
-- Provide CSV download options for HR and administrative purposes.
+- **Leave Management**
+  - Apply for leave
+  - Leave approval system
+  - Leave history tracking
+  - Leave analytics
 
-### 4. Employee Management
-- Add or remove employees as needed.
-- Maintain promotion records (e.g., Junior → Senior).
-- Update employee details such as mobile number, email, and department changes.
+- **Automated Features**
+  - Email reminders for missing attendance
+  - PDF report generation
+  - Face registration system
 
-### 5. User-Friendly Web Interface
-- Built using Streamlit for an interactive and intuitive experience.
-- Works seamlessly on both mobile and desktop devices.
-- Simple buttons and forms ensure usability without technical knowledge.
+## Prerequisites
 
-### 6. Security and Privacy
-- Uses a local MongoDB database for secure data storage on company servers.
-- Only HR/admin has access; it is not a public system.
+- Python 3.8 or higher
+- MongoDB database
+- Webcam (for face recognition)
+- SMTP server (for email notifications)
 
-## 🚀 Final Goal
-- Automate the company’s attendance tracking system.
-- Reduce HR’s manual work, saving valuable time.
-- Maintain accurate records for seamless salary calculations.
-- Analyze data to identify disciplined employees and improve workforce management.
+## Installation
 
-## 🎯 Why Is This Useful?
-✔ Ideal for small businesses (10-500 employees).
-✔ Suitable for offices, schools, and factories.
-✔ Free & Open Source – No need for additional software purchases.
-
----
-
-## 🛠 Tech Stack
-- **Frontend:** Streamlit
-- **Backend:** Python
-- **Database:** MongoDB
-- **Libraries:** Pandas, NumPy, Streamlit
-
-## 📂 Installation & Setup
+1. Clone the repository:
 ```bash
-# Clone this repository
-git clone https://github.com/VishalRathod21/Employee_Attendance_System.git
+git clone <repository-url>
+cd employee-attendance-system
+```
 
-# Navigate to project directory
-cd Employee_Attendance_System
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-# Install dependencies
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-# Run the Streamlit app
+4. Create a `.env` file in the root directory with the following variables:
+```env
+MONGO_URI=your_mongodb_connection_string
+DB_NAME=your_database_name
+SMTP_SERVER=your_smtp_server
+SMTP_PORT=your_smtp_port
+SMTP_USERNAME=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+```
+
+## Usage
+
+1. Start the application:
+```bash
 streamlit run app.py
 ```
 
-## 📞 Contact
-If you have any issues or feature suggestions, feel free to contact [Vishal Rathod](https://github.com/VishalRathod21).
+2. Access the application in your web browser at `http://localhost:8501`
+
+3. Login with your credentials:
+   - Admin: Full access to all features
+   - Employee: Limited access to attendance marking and leave management
+
+## Project Structure
+
+```
+employee-attendance-system/
+├── app.py                 # Main application file
+├── requirements.txt       # Python dependencies
+├── README.md             # Project documentation
+└── .env                  # Environment variables (create this file)
+```
+
+## Features in Detail
+
+### Admin Features
+- View and manage all employee records
+- Generate attendance reports
+- Approve/reject leave applications
+- Register employee faces
+- Send attendance reminders
+- View analytics dashboard
+
+### Employee Features
+- Mark attendance (face recognition or manual)
+- View personal attendance history
+- Apply for leave
+- View leave status
+- Register own face
+
+## Security Features
+
+- Password hashing
+- Session management
+- Role-based access control
+- Secure database connections
+- Environment variable configuration
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Streamlit for the web framework
+- MongoDB for the database
+- FaceNet for face recognition
+- ReportLab for PDF generation
+- Plotly for data visualization
+
+## Support
+
+For support, email [your-email@example.com] or open an issue in the repository.
+
+## Future Enhancements
+
+- Mobile application support
+- Biometric integration
+- Advanced analytics
+- Integration with HR systems
+- Multi-language support
+- Dark mode
+- Export to Excel
+- API endpoints 
