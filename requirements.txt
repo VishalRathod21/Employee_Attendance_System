@@ -6,12 +6,8 @@ numpy
 scikit-learn
 opencv-python
 torch
-facenet_pytorch
+facenet-pytorch
 matplotlib
 plotly
 reportlab
 streamlit-authenticator
-smtplib
-email
-hashlib
-datetime 
